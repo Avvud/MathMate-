@@ -1,6 +1,7 @@
 """
-build_index.py — NCERT PDF Ingestion & FAISS Index Builder for MathMate
-Supports: single combined NCERT book PDF or a folder of per-chapter PDFs.
+build_index.py — PDF Ingestion & FAISS Index Builder for MathMate v3.0
+Supports per-subject indices: MATHEMATICS, PHYSICS, CHEMISTRY.
+Each subject's index is stored in its own subdirectory under faiss_index/.
 """
 
 import os
@@ -11,31 +12,46 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
-FAISS_PATH = "faiss_index"
+FAISS_BASE_PATH = "faiss_index"
 EMBEDDINGS_MODEL = "BAAI/bge-large-en-v1.5"
 
-# NCERT Class 10 chapter name map (detected by title lines in the PDF)
-CHAPTER_TITLES = {
-    1: "Real Numbers",
-    2: "Polynomials",
-    3: "Pair of Linear Equations in Two Variables",
-    4: "Quadratic Equations",
-    5: "Arithmetic Progressions",
-    6: "Triangles",
-    7: "Coordinate Geometry",
-    8: "Introduction to Trigonometry",
-    9: "Some Applications of Trigonometry",
-    10: "Circles",
-    11: "Constructions",
-    12: "Areas Related to Circles",
-    13: "Surface Areas and Volumes",
-    14: "Statistics",
+# Subject key → subdirectory name
+SUBJECT_DIRS = {
+    "MATHEMATICS": "math",
+    "SCIENCE":     "science",
 }
 
+# Generic pattern: matches "Chapter 3", "Unit 2", "Section 5", etc.
 CHAPTER_PATTERN = re.compile(
-    r"chapter\s*(\d{1,2})",
+    r"(chapter|unit|section|part|module|lesson)\s*(\d{1,2})[^\w]*(.*?)\n",
     re.IGNORECASE,
 )
+
+# Legacy alias so old code importing FAISS_PATH still works
+FAISS_PATH = os.path.join(FAISS_BASE_PATH, "math")
+
+
+def get_faiss_path(subject: str = "MATHEMATICS") -> str:
+    """Return the FAISS index directory for the given subject."""
+    sub = SUBJECT_DIRS.get(subject.upper(), "math")
+    return os.path.join(FAISS_BASE_PATH, sub)
+
+
+def detect_chapter(text: str) -> tuple[str, str]:
+    """
+    Try to detect a chapter/unit/section heading in the first 400 chars of a page.
+    Returns (chapter_id, chapter_name) e.g. ("Chapter 3", "Polynomials")
+    or ("General", "General") if nothing found.
+    """
+    m = CHAPTER_PATTERN.search(text[:400])
+    if m:
+        prefix  = m.group(1).capitalize()
+        num     = m.group(2)
+        title   = m.group(3).strip().rstrip(":-").strip()
+        ch_id   = f"{prefix} {num}"
+        ch_name = f"{ch_id} — {title}" if title else ch_id
+        return ch_id, ch_name
+    return "General", "General"
 
 
 def extract_text_from_pdf(pdf_path: str) -> list[dict]:
@@ -45,24 +61,21 @@ def extract_text_from_pdf(pdf_path: str) -> list[dict]:
     """
     pages = []
     doc = fitz.open(pdf_path)
-    current_chapter = 0
+    current_chapter_id   = "General"
     current_chapter_name = "General"
 
     for page_num, page in enumerate(doc, start=1):
         text = page.get_text("text")
 
-        # Try to detect chapter heading on this page
-        m = CHAPTER_PATTERN.search(text[:300])  # check first 300 chars of page
-        if m:
-            ch_num = int(m.group(1))
-            if 1 <= ch_num <= 14:
-                current_chapter = ch_num
-                current_chapter_name = CHAPTER_TITLES.get(ch_num, f"Chapter {ch_num}")
+        ch_id, ch_name = detect_chapter(text)
+        if ch_id != "General":
+            current_chapter_id   = ch_id
+            current_chapter_name = ch_name
 
         pages.append({
-            "page_num": page_num,
-            "text": text,
-            "chapter_num": current_chapter,
+            "page_num":    page_num,
+            "text":        text,
+            "chapter_num": current_chapter_id,
             "chapter_name": current_chapter_name,
         })
 
@@ -79,12 +92,19 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
-def build_faiss_from_pdf(pdf_path: str, progress_callback=None) -> bool:
+def build_faiss_from_pdf(
+    pdf_path: str,
+    progress_callback=None,
+    subject: str = "MATHEMATICS",
+) -> bool:
     """
-    Main entry point: reads a PDF, splits into chunks, builds & saves FAISS index.
+    Main entry point: reads a PDF, splits into chunks, builds & saves FAISS index
+    for the given subject.
     progress_callback(step: str, pct: float) — optional for Streamlit progress bar.
     Returns True on success.
     """
+    faiss_path = get_faiss_path(subject)
+
     if progress_callback:
         progress_callback("📖 Reading PDF pages...", 0.05)
 
@@ -113,10 +133,11 @@ def build_faiss_from_pdf(pdf_path: str, progress_callback=None) -> bool:
             docs.append(Document(
                 page_content=chunk,
                 metadata={
-                    "page": page["page_num"],
-                    "chapter_num": page["chapter_num"],
+                    "page":         page["page_num"],
+                    "chapter_num":  page["chapter_num"],
                     "chapter_name": page["chapter_name"],
-                    "source": os.path.basename(pdf_path),
+                    "source":       os.path.basename(pdf_path),
+                    "subject":      subject,
                 },
             ))
 
@@ -132,8 +153,8 @@ def build_faiss_from_pdf(pdf_path: str, progress_callback=None) -> bool:
         progress_callback("💾 Creating FAISS index...", 0.85)
 
     store = FAISS.from_documents(docs, embeddings)
-    os.makedirs(FAISS_PATH, exist_ok=True)
-    store.save_local(FAISS_PATH)
+    os.makedirs(faiss_path, exist_ok=True)
+    store.save_local(faiss_path)
 
     if progress_callback:
         progress_callback("✅ Index ready!", 1.0)
@@ -141,19 +162,21 @@ def build_faiss_from_pdf(pdf_path: str, progress_callback=None) -> bool:
     return True
 
 
-def is_index_built() -> bool:
-    """Check if a FAISS index already exists."""
-    return os.path.exists(os.path.join(FAISS_PATH, "index.faiss"))
+def is_index_built(subject: str = "MATHEMATICS") -> bool:
+    """Check if a FAISS index already exists for the given subject."""
+    return os.path.exists(os.path.join(get_faiss_path(subject), "index.faiss"))
 
 
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python build_index.py <path_to_ncert_pdf>")
+        print("Usage: python build_index.py <path_to_pdf> [MATHEMATICS|SCIENCE]")
         sys.exit(1)
 
-    pdf = sys.argv[1]
+    pdf  = sys.argv[1]
+    subj = sys.argv[2].upper() if len(sys.argv) > 2 else "MATHEMATICS"
+
     if not os.path.exists(pdf):
         print(f"File not found: {pdf}")
         sys.exit(1)
@@ -162,5 +185,5 @@ if __name__ == "__main__":
         bar = "█" * int(pct * 20)
         print(f"\r[{bar:<20}] {int(pct*100)}%  {step}", end="", flush=True)
 
-    build_faiss_from_pdf(pdf, progress_callback=cli_progress)
-    print(f"\n\n✅ FAISS index saved to ./{FAISS_PATH}/")
+    build_faiss_from_pdf(pdf, progress_callback=cli_progress, subject=subj)
+    print(f"\n\n✅ FAISS index saved to ./{get_faiss_path(subj)}/")

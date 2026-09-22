@@ -1,0 +1,7 @@
+[project]
+name = "phaze1-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
