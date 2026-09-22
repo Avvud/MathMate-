@@ -26,56 +26,268 @@ st.set_page_config(
 # ── CSS ──────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; }
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --paper: #FAF7F0;
+  --ink: #23262B;
+  --rule-blue: #2B4C7E;
+  --pencil: #6B6558;
+  --correct: #3F7D4F;
+  --flag: #B54834;
+  --margin-red: #D05A4F;
+  --desk-bg: #EFECE6;
+  --card-bg: #F4F0E8;
+  --shadow-subtle: 0 2px 8px rgba(35, 38, 43, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1C2320;
+    --ink: #EDE7D9;
+    --rule-blue: #4A72A8;
+    --pencil: #A8A294;
+    --correct: #6FB080;
+    --flag: #D97362;
+    --margin-red: #C85A4F;
+    --desk-bg: #141A17;
+    --card-bg: #232C28;
+    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+html, body, [class*="css"] {
+  font-family: 'IBM Plex Sans', sans-serif !important;
+  color: var(--ink) !important;
+}
+
+h1, h2, h3, h4, .serif-font {
+  font-family: 'Lora', serif !important;
+}
+
 #MainMenu, footer { visibility: hidden; }
-.stApp { background: #080a0f; color: #e2e8f0; }
-[data-testid="stSidebar"] { background: #0c0e16 !important; border-right: 1px solid rgba(255,255,255,0.07); }
-[data-testid="stSidebar"] * { color: #e2e8f0 !important; }
-[data-testid="stChatMessage"] { background: #11141c; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 14px; }
-[data-testid="stChatInput"] { background: #11141c !important; border: 1px solid rgba(110,231,183,0.3) !important; border-radius: 12px !important; }
-[data-testid="stChatInput"]:focus-within { border-color: rgba(110,231,183,0.7) !important; box-shadow: 0 0 0 2px rgba(110,231,183,0.15) !important; }
-.stButton > button { background: rgba(110,231,183,0.08) !important; border: 1px solid rgba(110,231,183,0.25) !important; color: #6ee7b7 !important; border-radius: 8px !important; font-family: 'DM Mono', monospace !important; font-size: 12px !important; transition: all 0.2s !important; }
-.stButton > button:hover { background: rgba(110,231,183,0.18) !important; transform: translateY(-1px) !important; }
-[data-testid="stFileUploader"] { background: #11141c !important; border: 1px dashed rgba(129,140,248,0.35) !important; border-radius: 10px !important; }
-hr { border-color: rgba(255,255,255,0.07) !important; }
-/* Welcome card */
-.welcome-card { background:linear-gradient(135deg,rgba(110,231,183,0.06),rgba(129,140,248,0.06)); border:1px solid rgba(110,231,183,0.15); border-radius:18px; padding:28px 32px; margin-bottom:24px; }
-.welcome-card h2 { color:#6ee7b7; margin-bottom:8px; font-size:22px; }
-.welcome-card p { color:#94a3b8; font-size:14px; line-height:1.7; margin:0; }
-/* Input type badges */
-.itype-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:6px; }
-.it-text  { background:rgba(96,165,250,0.1);  color:#60a5fa; border:1px solid rgba(96,165,250,0.2); }
-.it-voice { background:rgba(167,139,250,0.1); color:#a78bfa; border:1px solid rgba(167,139,250,0.2); }
-.it-image { background:rgba(251,191,36,0.1);  color:#fbbf24; border:1px solid rgba(251,191,36,0.2); }
-.it-file  { background:rgba(244,114,182,0.1); color:#f472b6; border:1px solid rgba(244,114,182,0.2); }
-/* Chapter badge */
-.chapter-badge { font-family:'DM Mono',monospace; font-size:11px; background:rgba(129,140,248,0.1); color:#818cf8; border:1px solid rgba(129,140,248,0.2); border-radius:6px; padding:4px 10px; display:inline-block; margin-bottom:12px; }
-/* Subject badges */
-.subj-math    { background:rgba(110,231,183,0.12); color:#6ee7b7; border:1px solid rgba(110,231,183,0.3); border-radius:6px; padding:3px 10px; font-family:'DM Mono',monospace; font-size:11px; display:inline-block; }
-.subj-science { background:rgba(96,165,250,0.12); color:#60a5fa; border:1px solid rgba(96,165,250,0.3); border-radius:6px; padding:3px 10px; font-family:'DM Mono',monospace; font-size:11px; display:inline-block; }
-/* Index status per subject */
-.idx-ready { background:rgba(110,231,183,0.08); border:1px solid rgba(110,231,183,0.2); border-radius:8px; padding:6px 10px; font-size:12px; color:#6ee7b7; font-family:'DM Mono',monospace; }
-.idx-missing { background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); border-radius:8px; padding:6px 10px; font-size:12px; color:#475569; font-family:'DM Mono',monospace; }
-/* ── Response / chat area readable styles ── */
-[data-testid="stChatMessage"] p { font-size:15px !important; line-height:1.85 !important; color:#dde4f0 !important; }
-[data-testid="stChatMessage"] li { font-size:15px !important; line-height:1.8 !important; margin-bottom:4px; }
-[data-testid="stChatMessage"] strong { color:#e2e8f0 !important; }
-[data-testid="stChatMessage"] code { font-family:'DM Mono',monospace !important; font-size:13px !important; background:rgba(129,140,248,0.13) !important; color:#c4b5fd !important; padding:2px 7px !important; border-radius:4px !important; }
-/* Mode badge: [ORIENT], [TEACH], etc. parsed by render_response */
-.mode-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.07em; padding:3px 10px; border-radius:5px; margin-bottom:10px; margin-right:6px; font-weight:500; }
-.mode-math    { background:rgba(110,231,183,0.12); color:#6ee7b7; border:1px solid rgba(110,231,183,0.3); }
-.mode-physics { background:rgba(96,165,250,0.12);  color:#60a5fa; border:1px solid rgba(96,165,250,0.3); }
-.mode-chem    { background:rgba(251,146,60,0.12);  color:#fb923c; border:1px solid rgba(251,146,60,0.3); }
-.mode-neutral { background:rgba(129,140,248,0.12); color:#a5b4fc; border:1px solid rgba(129,140,248,0.3); }
-/* Equation block wrapper (wraps $$...$$) */
-.eq-block { background:rgba(110,231,183,0.05); border-left:3px solid rgba(110,231,183,0.4); border-radius:0 8px 8px 0; padding:12px 18px; margin:12px 0; overflow-x:auto; }
-/* Step separator */
-.step-block { border-left:2px solid rgba(129,140,248,0.3); padding-left:14px; margin:10px 0; }
-/* Mode selector styling */
-.mode-indicator { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.08em; padding:4px 12px; border-radius:6px; display:inline-block; margin-top:6px; }
-.mode-teach  { background:rgba(110,231,183,0.12); color:#6ee7b7; border:1px solid rgba(110,231,183,0.3); }
-.mode-direct { background:rgba(251,191,36,0.12);  color:#fbbf24; border:1px solid rgba(251,191,36,0.3); }
+
+/* Main app background: notebook ruling pattern */
+.stApp {
+  background-color: var(--paper) !important;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 27px,
+    rgba(43, 76, 126, 0.05) 27px,
+    rgba(43, 76, 126, 0.05) 28px
+  ) !important;
+  color: var(--ink) !important;
+}
+
+/* Sidebar: Study Desk Vernacular */
+[data-testid="stSidebar"] {
+  background-color: var(--desk-bg) !important;
+  border-right: 2px solid rgba(43, 76, 126, 0.12) !important;
+}
+
+[data-testid="stSidebar"] * {
+  color: var(--ink) !important;
+}
+
+/* Sidebar desk sections */
+.desk-section-header {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rule-blue);
+  border-bottom: 1px solid rgba(43, 76, 126, 0.15);
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+
+/* Knowledge base cards in sidebar */
+.desk-kb-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(35, 38, 43, 0.1);
+  border-left: 4px solid var(--rule-blue);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.desk-kb-card.idx-ready {
+  border-left-color: var(--correct);
+}
+
+.desk-kb-card.idx-missing {
+  border-left-color: var(--pencil);
+  opacity: 0.7;
+}
+
+/* Mode Indicator */
+.desk-mode-box {
+  background: var(--card-bg);
+  border: 1px solid rgba(43, 76, 126, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-subtle);
+  margin-top: 8px;
+}
+
+.desk-mode-box.teach {
+  border-left: 4px solid var(--rule-blue);
+}
+
+.desk-mode-box.direct {
+  border-left: 4px solid #D97706;
+}
+
+/* Messages Area with Red Notebook Margin Line */
+[data-testid="stChatMessage"] {
+  background: transparent !important;
+  border: none !important;
+  border-left: 2px solid var(--margin-red) !important;
+  border-radius: 0 !important;
+  padding-left: 18px !important;
+  margin-bottom: 24px !important;
+  box-shadow: none !important;
+}
+
+[data-testid="stChatMessage"] p {
+  font-size: 15px !important;
+  line-height: 1.85 !important;
+  color: var(--ink) !important;
+}
+
+[data-testid="stChatMessage"] strong {
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+/* Code & Math Monospace */
+[data-testid="stChatMessage"] code, .mono-font {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 13.5px !important;
+  background: rgba(43, 76, 126, 0.07) !important;
+  color: var(--rule-blue) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* Equation block ($$...$$) styled like notebook boxed calculation */
+.eq-block {
+  background: rgba(43, 76, 126, 0.04);
+  border-left: 3px solid var(--rule-blue);
+  border-radius: 0 6px 6px 0;
+  padding: 14px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* DIRECT mode final boxed answer animation */
+.direct-answer-box {
+  border: 2px solid var(--rule-blue);
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: rgba(43, 76, 126, 0.05);
+  display: inline-block;
+  margin: 10px 0;
+  animation: drawBox 0.6s ease-out forwards;
+}
+
+@keyframes drawBox {
+  0% { box-shadow: 0 0 0 0 rgba(43, 76, 126, 0); border-color: transparent; }
+  100% { box-shadow: 0 2px 10px rgba(43, 76, 126, 0.15); border-color: var(--rule-blue); }
+}
+
+/* TEACH mode step reveal animation */
+.step-reveal {
+  animation: inkReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes inkReveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mode transition animation */
+.mode-switch-wash {
+  animation: pageWash 0.3s ease-out;
+}
+
+@keyframes pageWash {
+  0% { opacity: 0.85; }
+  100% { opacity: 1; }
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .direct-answer-box, .step-reveal, .mode-switch-wash {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Welcome Notebook Card */
+.welcome-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(43, 76, 126, 0.18);
+  border-left: 5px solid var(--rule-blue);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.welcome-card h2 {
+  font-family: 'Lora', serif;
+  color: var(--rule-blue);
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.welcome-card p {
+  color: var(--pencil);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+/* Custom Input Affordances (Tabs) */
+.itype-affordance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(43, 76, 126, 0.08);
+  color: var(--rule-blue);
+  border: 1px solid rgba(43, 76, 126, 0.15);
+  margin-bottom: 8px;
+}
+
+.itype-voice { background: rgba(111, 176, 128, 0.12); color: var(--correct); border-color: rgba(111, 176, 128, 0.25); }
+.itype-image { background: rgba(217, 119, 6, 0.1); color: #D97706; border-color: rgba(217, 119, 6, 0.25); }
+.itype-file  { background: rgba(181, 72, 52, 0.1); color: var(--flag); border-color: rgba(181, 72, 52, 0.25); }
+
+/* Buttons */
+.stButton > button {
+  background: var(--rule-blue) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-family: 'IBM Plex Sans', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 14px !important;
+  transition: opacity 0.2s !important;
+}
+
+.stButton > button:hover {
+  opacity: 0.9 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -117,18 +329,79 @@ def _extract_badges(text: str) -> tuple[str, str]:
     return "".join(badge_html_parts), remaining
 
 
-def render_response(text: str):
+def normalize_latex_delimiters(text: str) -> str:
+    """Convert \\[ \\] and \\( \\) style LaTeX into $$ $$ and $ $ style,
+    since Streamlit and KaTeX auto-render primarily listen for $ delimiters."""
+    if not text:
+        return ""
+    text = re.sub(r'\\\[(.*?)\\\]', r'$$\1$$', text, flags=re.DOTALL)
+    text = re.sub(r'\\\((.*?)\\\)', r'$\1$', text, flags=re.DOTALL)
+
+    # Fallback for standalone [ math ] brackets (e.g. [ V = I R . ])
+    def bracket_replacer(m):
+        full = m.group(0)
+        content = m.group(1).strip()
+        # Protect badges like [TEACH], [DIRECT], [MATHEMATICS], [PHYSICS], [CHEMISTRY], [ORIENT]
+        if re.match(r'^[A-Z_/ ]+$', content) and len(content) <= 20:
+            return full
+        math_inds = (
+            '\\', '=', '+', '-', '*', '/', '^', '_', '<', '>',
+            '\\frac', '\\dfrac', '\\text', '\\boxed', '\\Omega', '\\degree',
+            '\\times', '\\cdot', '\\sqrt', '\\alpha', '\\beta', '\\theta',
+            '\\mu', '\\rho', '\\pi', '\\Delta', '\\approx', '\\pm'
+        )
+        if any(ind in content for ind in math_inds) or re.search(r'[A-Za-z0-9_\{\}]+\s*=\s*[A-Za-z0-9_\{\}\\\s\.\,\+\-\*\/\(\)]+', content):
+            return f"\n$$\n{content}\n$$\n"
+        return full
+
+    text = re.sub(r'\[\s*([^\]\n]+?)\s*\](?!\()', bracket_replacer, text)
+
+    # Fallback for inline parenthesized latex like (V_2 = 120\ \text{V}) or (I = \dfrac{V}{R})
+    def paren_replacer(m):
+        full = m.group(0)
+        content = m.group(1).strip()
+        math_inds = (
+            '\\text', '\\frac', '\\dfrac', '\\Omega', '\\qquad', '\\times',
+            '\\cdot', '\\sqrt', '\\boxed', '\\alpha', '\\beta', '\\theta',
+            '\\mu', '\\rho', '\\pi', '\\degree', '\\Delta', '_'
+        )
+        if any(ind in content for ind in math_inds):
+            return f"${content}$"
+        return full
+
+    text = re.sub(r'\(([^()\n]+?)\)', paren_replacer, text)
+
+    # Ensure standalone \boxed{...} outside $ or $$ is wrapped in $$
+    def boxed_fixer(m):
+        prefix = m.group(1)
+        content = m.group(2)
+        if prefix == '$':
+            return m.group(0)
+        return f"{prefix}$$\\boxed{{{content}}}$$"
+
+    text = re.sub(r'(^|[^$])\\boxed\{([^{}]+)\}', boxed_fixer, text)
+
+    # Clean up empty block math
+    text = re.sub(r'\$\$\s*\$\$', '', text)
+    return text
+
+
+def render_response(text: str, is_latest: bool = False):
     """
-    Render the AI response in a clean, readable format:
-    • [SUBJECT] [MODE] badges shown as coloured chips
-    • Block equations ($$...$$) wrapped in a highlighted box
-    • Everything else rendered via st.markdown (handles $...$ inline math,
-      bold, bullet lists, headers, etc.)
+    Render the AI response in a clean, notebook-style format:
+    • [SUBJECT] [MODE] badges shown as chip indicators
+    • Block equations ($$...$$) wrapped in a styled equation box
+    • Final boxed answers in DIRECT mode receive a continuous line animation
     """
+    text = normalize_latex_delimiters(text)
     badge_html, body = _extract_badges(text)
 
     if badge_html:
         st.markdown(badge_html, unsafe_allow_html=True)
+
+    reveal_cls = "step-reveal" if is_latest else ""
+    if reveal_cls:
+        st.markdown(f"<div class='{reveal_cls}'>", unsafe_allow_html=True)
 
     # Split on $$ blocks so we can wrap each display equation in a styled box
     parts = re.split(r"(\$\$[\s\S]*?\$\$)", body)
@@ -138,20 +411,37 @@ def render_response(text: str):
         if not part:
             continue
         if part.startswith("$$") and part.endswith("$$"):
-            st.markdown("<div class='eq-block'>", unsafe_allow_html=True)
+            is_boxed_ans = "\\boxed" in part
+            box_cls = "direct-answer-box" if is_boxed_ans else "eq-block"
+            st.markdown(f"<div class='{box_cls}'>", unsafe_allow_html=True)
             st.markdown(part)
             st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.markdown(part)
 
+    if reveal_cls:
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# ── INPUT TYPE BADGE HTML ─────────────────────────────────
+
+# ── INPUT TYPE AFFORDANCE HTML ────────────────────────────
 def itype_html(it: str) -> str:
-    icons = {"TEXT":"💬 TEXT","VOICE_TRANSCRIPT":"🎙️ VOICE","IMAGE_HANDWRITTEN":"📷 HANDWRITTEN","IMAGE_TEXTBOOK":"📷 TEXTBOOK","FILE_PDF":"📄 FILE"}
-    css   = {"TEXT":"it-text","VOICE_TRANSCRIPT":"it-voice","IMAGE_HANDWRITTEN":"it-image","IMAGE_TEXTBOOK":"it-image","FILE_PDF":"it-file"}
-    cls  = css.get(it, "it-text")
+    icons = {
+        "TEXT": "💬 Text Question",
+        "VOICE_TRANSCRIPT": "🎙️ Spoken Audio",
+        "IMAGE_HANDWRITTEN": "📷 Handwritten Sheet",
+        "IMAGE_TEXTBOOK": "📷 Textbook Snapshot",
+        "FILE_PDF": "📄 Document Worksheet",
+    }
+    css = {
+        "TEXT": "",
+        "VOICE_TRANSCRIPT": "itype-voice",
+        "IMAGE_HANDWRITTEN": "itype-image",
+        "IMAGE_TEXTBOOK": "itype-image",
+        "FILE_PDF": "itype-file",
+    }
+    cls = css.get(it, "")
     label = icons.get(it, it)
-    return f"<div class='itype-badge {cls}'>{label}</div>"
+    return f"<div class='itype-affordance {cls}'>{label}</div>"
 
 
 def subject_badge_html(subject: str) -> str:
@@ -262,18 +552,18 @@ CHAPTERS = [
 ]
 
 
-# ── SIDEBAR ───────────────────────────────────────────────
+# ── SIDEBAR (STUDY DESK) ──────────────────────────────────
 with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:16px 0 8px 0;'>
       <div style='font-size:38px;'>🎓</div>
-      <div style='font-family:"DM Mono",monospace;font-size:19px;color:#6ee7b7;font-weight:500;letter-spacing:.05em;'>MathMate</div>
-      <div style='font-size:10px;color:#334155;font-family:"DM Mono",monospace;margin-top:4px;'>v4.0 · NCERT Class 10 · AI Tutor</div>
+      <div style='font-family:"Lora",serif;font-size:20px;color:var(--rule-blue);font-weight:600;'>MathMate Desk</div>
+      <div style='font-size:11px;color:var(--pencil);font-family:"IBM Plex Sans",sans-serif;margin-top:2px;'>NCERT Class 10 Paper & Pencil Tutor</div>
     </div>""", unsafe_allow_html=True)
     st.divider()
 
     # ── MODE SELECTOR ────────────────────────────────────
-    st.markdown("<div style='font-family:\"DM Mono\",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#fbbf24;margin-bottom:10px;'>🎯 Tutor Mode</div>", unsafe_allow_html=True)
+    st.markdown("<div class='desk-section-header'>🎯 Tutor Mode</div>", unsafe_allow_html=True)
 
     mode_choice = st.radio(
         "Mode",
@@ -286,14 +576,14 @@ with st.sidebar:
 
     # Show current mode indicator
     if st.session_state.mode == "TEACH":
-        st.markdown("<div class='mode-indicator mode-teach'>🧑‍🏫 TEACH — Socratic guidance</div>", unsafe_allow_html=True)
+        st.markdown("<div class='desk-mode-box teach'>🧑‍🏫 TEACH — Socratic notebook guidance</div>", unsafe_allow_html=True)
     else:
-        st.markdown("<div class='mode-indicator mode-direct'>⚡ DIRECT — Full solutions</div>", unsafe_allow_html=True)
+        st.markdown("<div class='desk-mode-box direct'>⚡ DIRECT — Full worked solution</div>", unsafe_allow_html=True)
 
     st.divider()
 
     # ── SUBJECT SWITCHER ──────────────────────────────────
-    st.markdown("<div style='font-family:\"DM Mono\",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#818cf8;margin-bottom:10px;'>🎯 Active Subject</div>", unsafe_allow_html=True)
+    st.markdown("<div class='desk-section-header'>📚 Active Subject</div>", unsafe_allow_html=True)
 
     subj_options = list(SUBJECTS.keys())
     subj_labels  = [SUBJECTS[s]["label"] for s in subj_options]
@@ -317,17 +607,18 @@ with st.sidebar:
     st.divider()
 
     # ── PER-SUBJECT KNOWLEDGE BASES ───────────────────────
-    st.markdown("<div style='font-family:\"DM Mono\",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6ee7b7;margin-bottom:10px;'>📚 Knowledge Bases</div>", unsafe_allow_html=True)
+    st.markdown("<div class='desk-section-header'>📖 Desk Textbooks</div>", unsafe_allow_html=True)
 
     for subj_key, subj_info in SUBJECTS.items():
         built = is_index_built(subj_key)
         status_css   = "idx-ready" if built else "idx-missing"
         status_icon  = "✅" if built else "○"
-        status_label = "Index ready" if built else "No PDF yet"
+        status_label = "Knowledge base ready" if built else "No PDF loaded"
 
         st.markdown(
-            f"<div class='{status_css}' style='margin-bottom:6px;'>"
-            f"{status_icon} <strong>{subj_info['label']}</strong> — {status_label}"
+            f"<div class='desk-kb-card {status_css}'>"
+            f"<div>{status_icon} <strong>{subj_info['label']}</strong></div>"
+            f"<div style='font-size:11px;color:var(--pencil);margin-top:2px;'>{status_label}</div>"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -337,8 +628,7 @@ with st.sidebar:
     # ── UPLOAD FOR ACTIVE SUBJECT ─────────────────────────
     active_info = SUBJECTS[active_subj]
     st.markdown(
-        f"<div style='font-family:\"DM Mono\",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:{active_info['color']};margin-bottom:8px;'>"
-        f"{active_info['avatar']} Upload {active_info['label']} PDF</div>",
+        f"<div class='desk-section-header'>{active_info['avatar']} Upload {active_info['label']} PDF</div>",
         unsafe_allow_html=True,
     )
 
@@ -355,7 +645,7 @@ with st.sidebar:
 
         def on_prog(step, pct):
             prog.progress(pct)
-            stat.markdown(f"<span style='font-size:12px;color:#94a3b8;'>{step}</span>", unsafe_allow_html=True)
+            stat.markdown(f"<span style='font-size:12px;color:var(--pencil);'>{step}</span>", unsafe_allow_html=True)
 
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp.write(uploaded_pdf.read())
@@ -374,7 +664,7 @@ with st.sidebar:
     st.divider()
 
     # ── CHAPTER / TOPIC ───────────────────────────────────
-    st.markdown("<div style='font-family:\"DM Mono\",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#818cf8;margin-bottom:10px;'>📖 Chapter / Topic</div>", unsafe_allow_html=True)
+    st.markdown("<div class='desk-section-header'>🔖 Chapter / Unit</div>", unsafe_allow_html=True)
     sel_ch = st.selectbox(
         "chapter",
         CHAPTERS,
@@ -397,7 +687,7 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.markdown("<div style='font-family:\"DM Mono\",monospace;font-size:10px;color:#1e293b;text-align:center;'>Groq · LLM · Whisper · Vision<br/>Teach & Direct Modes · CBSE NCERT Class 10</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:11px;color:var(--pencil);text-align:center;'>CBSE NCERT Class 10 Tutor<br/>Paper & Chalkboard Edition</div>", unsafe_allow_html=True)
 
 
 # ── MAIN AREA ─────────────────────────────────────────────
@@ -475,7 +765,7 @@ def _dispatch(user_msg: str, input_type: str, engine: MathMate, file_text: str =
                 file_text=file_text,
                 subject=subject,
             )
-        render_response(response)
+        render_response(response, is_latest=True)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.rerun()
