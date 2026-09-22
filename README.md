@@ -1,94 +1,269 @@
-# 📐 MathMate v2.1 
+# 🎓 MathMate v4.0 — NCERT Class 10 AI Tutor
 
-> **Your Socratic NCERT Class 10 Mathematics Tutor.**
-> A multimodal, AI-powered tutor that guides students to the answer, rather than just giving it away.
+<div align="center">
 
-![MathMate Banner](https://img.shields.io/badge/MathMate-v2.1-6ee7b7?style=for-the-badge&logo=streamlit)
-![Python](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python)
-![Groq](https://img.shields.io/badge/LLM-Llama_3.3_70b-f87171?style=for-the-badge&logo=meta)
-![FAISS](https://img.shields.io/badge/Vector_DB-FAISS-818cf8?style=for-the-badge)
+![MathMate](https://img.shields.io/badge/MathMate-v4.0-2B4C7E?style=for-the-badge&logo=streamlit&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.9%2B-3F7D4F?style=for-the-badge&logo=python&logoColor=white)
+![Groq](https://img.shields.io/badge/LLM-Llama_3.3_70b-B54834?style=for-the-badge&logo=meta&logoColor=white)
+![FAISS](https://img.shields.io/badge/Vector_DB-FAISS-6B6558?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-60a5fa?style=for-the-badge)
 
-## 🌟 Overview
+**A warm, subject-grounded AI tutor for CBSE Class 10 NCERT Mathematics & Science.**
+*Built with a notebook-and-chalkboard aesthetic — designed for real Indian classrooms.*
 
-**MathMate** is an advanced Retrieval-Augmented Generation (RAG) application specifically tailored for CBSE Class 10 NCERT Mathematics. Built with **Streamlit**, **LangChain**, and **Groq (Llama-3.3-70b)**, MathMate acts as a personal tutor. 
+</div>
 
-It employs a strict **Socratic Method**—meaning it will carefully guide you through a problem step-by-step using hints, rather than directly revealing the final answer. It features a custom **Insist Gate** and **Answer Leak Detection** to ensure mathematical integrity and encourage genuine learning.
+---
 
-## ✨ Key Features
+## ✨ What is MathMate?
 
-- **🎙️ Multimodal Inputs:** Ask questions via text, voice (transcribed via Whisper), upload photos of handwritten working, or upload entire PDF worksheets!
-- **📖 NCERT Knowledge Base:** Upload your NCERT textbook PDF to build a local **FAISS** vector index. MathMate will use exact textbook theorems and formulas to guide you.
-- **🛡️ The "Insist Gate":** MathMate refuses to give you the final answer immediately. It will provide up to 4 hints. You must genuinely attempt the problem and explicitly ask for the answer multiple times before the gate opens.
-- **🧮 Full KaTeX Support:** Beautiful, natively rendered mathematical equations and formulas in the chat interface.
-- **👁️ Vision Intelligence:** Upload a photo of your notebook. MathMate will read your handwritten steps, identify exactly where you went wrong, and guide you back on track.
+MathMate is a Retrieval-Augmented Generation (RAG) tutor that uses your own NCERT textbook PDF as its knowledge base. It supports **two distinct tutoring modes**, **four input types**, and **two subjects** — all in a beautifully designed paper-and-pencil notebook UI.
+
+Unlike generic AI chatbots, MathMate is grounded in the CBSE curriculum. It cites chapter and page context from your uploaded textbook and refuses to invent facts.
+
+---
+
+## 🗂️ Project Structure
+
+```
+phaze1 rag/
+├── app.py              # Streamlit UI — Paper & Chalkboard design, all input modes
+├── mathmate.py         # Core RAG engine — dual-mode prompts, FAISS retrieval, LLM
+├── build_index.py      # PDF ingestion + FAISS index builder (CLI + programmatic)
+├── multimodal.py       # Voice (Whisper), Image (Vision LLM), PDF extraction
+├── requirements.txt    # Pinned Python dependencies
+├── run.bat             # One-click launcher for Windows
+├── .env                # API keys (not committed)
+├── faiss_index/
+│   ├── math/           # FAISS index for Mathematics (index.faiss + index.pkl)
+│   └── science/        # FAISS index for Science (index.faiss + index.pkl)
+└── ncertbook-pdf/      # Place your NCERT PDFs here (not committed)
+```
+
+---
+
+## 🚀 Features
+
+### 🎯 Two Tutoring Modes
+| Mode | Behaviour |
+|------|-----------|
+| **🧑‍🏫 TEACH** | Socratic method — never gives the answer directly. Guides you step by step with ORIENT → PROBE → UNSTICK → VERIFY → CELEBRATE. Switch to DIRECT from the sidebar anytime. |
+| **⚡ DIRECT** | Full worked solution immediately — every step shown with the reason for each, verified by substitution, and boxed final answer. |
+
+### 📚 Two Subjects (Lazy-Loaded)
+- **🧮 Mathematics** — NCERT Class 10 Maths (Algebra, Geometry, Trigonometry, Statistics, etc.)
+- **🔬 Science** — NCERT Class 10 Science (Physics + Chemistry in a single textbook)
+
+Each subject's FAISS index is loaded into memory **only when that subject is selected** — saving RAM and startup time.
+
+### 🎤 Four Input Types
+| Tab | Method | Description |
+|-----|--------|-------------|
+| 💬 Text | Typed | Standard text question |
+| 🎙️ Voice | Whisper STT | Speak your question; it's transcribed automatically |
+| 📷 Image | Vision LLM | Photo of handwritten working or a textbook page |
+| 📄 Document | PDF extract | Upload a worksheet; questions are extracted and listed |
+
+### 🏫 Notebook & Chalkboard UI
+- **Light mode**: Warm paper background (`#FAF7F0`), red notebook margin line, horizontal page ruling
+- **Dark mode**: Chalkboard feel (`#1C2320` slate + `#EDE7D9` chalk white)
+- **Fonts**: Lora (textbook serif) · IBM Plex Sans (UI) · IBM Plex Mono (equations/steps)
+- **Motion**: Ink-reveal animation for new TEACH steps; border-draw animation for DIRECT boxed answers
+- Fully respects `prefers-reduced-motion`
+
+### 🔢 LaTeX Rendering
+- Native Streamlit KaTeX — renders `$inline$` and `$$block$$` math natively
+- `normalize_latex_delimiters()` converts `\[...\]` and `\(...\)` to `$...$` automatically
+- `repair_malformed_latex()` fixes `\left$...\right$` malformations from the LLM
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Streamlit with custom dark-mode CSS
-- **LLM:** `llama-3.3-70b-versatile` powered by **Groq** for blazing fast inference
-- **Vector Store:** FAISS (Facebook AI Similarity Search)
-- **Embeddings:** HuggingFace Sentence Transformers
-- **PDF Extraction:** PyMuPDF (`fitz`) & `pypdf`
-- **Framework:** LangChain
+| Layer | Technology |
+|-------|-----------|
+| **UI** | Streamlit 1.45 with custom CSS (Paper & Chalkboard design system) |
+| **LLM** | `llama-3.3-70b-versatile` via **Groq** (ultra-fast inference) |
+| **Embeddings** | `BAAI/bge-large-en-v1.5` via HuggingFace Sentence Transformers |
+| **Vector Store** | FAISS (per-subject, lazy-loaded) |
+| **PDF Extraction** | PyMuPDF (`fitz`) + per-page chapter detection |
+| **Voice (STT)** | OpenAI Whisper via Groq API |
+| **Vision** | Groq Vision LLM for handwriting / textbook page OCR |
+| **Framework** | LangChain 0.3 (LCEL-compatible) |
 
-## 🚀 Getting Started
+---
+
+## ⚡ Quick Start
 
 ### 1. Prerequisites
+
 - Python 3.9+
-- A [Groq API Key](https://console.groq.com/keys)
+- A free [Groq API Key](https://console.groq.com/keys) (takes 30 seconds to create)
 
-### 2. Installation
-
-Clone the repository and install the dependencies:
+### 2. Clone & Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/mathebot-rag.git
-cd mathebot-rag
+git clone https://github.com/Avvud/MathMate-.git
+cd MathMate-
 
-# Create and activate a virtual environment
+# Create virtual environment
 python -m venv .venv
-# On Windows:
-.venv\Scripts\activate
-# On Mac/Linux:
-source .venv/bin/activate
+
+# Activate it
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Mac / Linux
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Configuration
+> **Note:** `faiss-gpu` is listed in `requirements.txt`. If you don't have a CUDA GPU, replace it with `faiss-cpu` before installing:
+> ```bash
+> pip install faiss-cpu
+> ```
 
-Create a `.env` file in the root directory and add your Groq API key:
+### 3. Configure API Key
+
+Create a `.env` file in the project root:
 
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY=gsk_your_key_here
 ```
 
-### 4. Run the Application
+Optionally override the model:
 
-You can start the app using the provided batch script or via Streamlit directly:
+```env
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+### 4. Build the Knowledge Base
+
+**Option A — via the app (recommended):**
+1. Run the app (Step 5 below)
+2. In the sidebar under **Upload Mathematics/Science PDF**, drop your NCERT PDF
+3. Click **Build Knowledge Base** and wait ~1 minute
+
+**Option B — via the CLI:**
 
 ```bash
-# Using Streamlit directly
+# Mathematics
+python build_index.py "ncertbook-pdf/math 10th.pdf" MATHEMATICS
+
+# Science (Physics + Chemistry)
+python build_index.py "ncertbook-pdf/science 10th.pdf" SCIENCE
+```
+
+Download the official free PDFs from [ncert.nic.in/textbook.php](https://ncert.nic.in/textbook.php) → Class X → Mathematics / Science.
+
+### 5. Run the App
+
+```bash
 streamlit run app.py
 
-# OR using the batch file (Windows)
+# OR on Windows, double-click:
 run.bat
 ```
 
-### 5. Using the App
-1. When the app opens, upload your Class 10 NCERT Mathematics PDF using the sidebar.
-2. Click **Build Knowledge Base**.
-3. Start asking questions using Text, Voice, Image, or Worksheet formats!
+Open [http://localhost:8501](http://localhost:8501) in your browser.
 
-## 🧠 How the Socratic Engine Works
+---
 
-MathMate evaluates your input and categorizes it into different modes:
-- **ORIENT:** Helps you figure out where to begin.
-- **PROBE:** Evaluates your handwritten or typed steps.
-- **UNSTICK:** Provides micro-hints if you are stuck.
-- **VERIFY:** Asks you to verify an answer you claim is correct.
-- **CELEBRATE:** Congratulates genuine understanding.
+## 🧠 How the RAG Pipeline Works
 
-*Disclaimer: MathMate is designed as an educational aid and should be used alongside traditional learning methods.*
+```
+User Question
+      │
+      ▼
+┌─────────────────┐
+│ Embed question  │  (BAAI/bge-large-en-v1.5)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│ FAISS similarity search         │  (top-6 chunks, re-ranked by chapter)
+│ Subject index: math / science   │
+└────────┬────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────────────┐
+│ Build system prompt                                  │
+│  BASE_ROLE + TEACH_MODE_PROMPT or DIRECT_MODE_PROMPT │
+│  + retrieved_chunks + input_type                     │
+└────────┬─────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────┐
+│ ChatGroq (llama-3.3-70b)    │  max_tokens=2048, temperature=0.4
+└────────┬────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────┐
+│ normalize_latex_delimiters() + repair_malformed_latex│
+│ render_response() → st.markdown (native KaTeX)      │
+└─────────────────────────────────────────────────────┘
+```
+
+Per-session retrieval cache (`(question, chapter, subject) → chunks`) prevents redundant embedding lookups within a session.
+
+---
+
+## 📂 Building Indices (CLI Reference)
+
+```bash
+# Usage
+python build_index.py <pdf_path> [MATHEMATICS|SCIENCE]
+
+# Examples
+python build_index.py "ncertbook-pdf/math 10th.pdf" MATHEMATICS
+python build_index.py "ncertbook-pdf/science 10th.pdf" SCIENCE
+
+# Output
+faiss_index/
+├── math/
+│   ├── index.faiss
+│   └── index.pkl
+└── science/
+    ├── index.faiss
+    └── index.pkl
+```
+
+---
+
+## 🔧 Configuration Reference
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GROQ_API_KEY` | *(required)* | Your Groq API key |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | LLM model to use |
+
+---
+
+## 🐛 Known Issues & Fixes
+
+| Issue | Root Cause | Fix Applied |
+|-------|-----------|-------------|
+| Blank AI responses | `openai/gpt-oss-120b` reasoning model exhausts token budget silently | Default changed to `llama-3.3-70b-versatile`; empty-response guard added |
+| LaTeX shows as raw text | Model uses `\[...\]` or `\(...\)` not recognised by KaTeX | `normalize_latex_delimiters()` converts them on the fly |
+| `\left$...\right$` malformation | Known Llama generation quirk | `repair_malformed_latex()` converts to `\left(...\right)` |
+| faiss ImportError | `faiss-gpu` not installed | Replace with `pip install faiss-cpu` if no CUDA GPU |
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Commit your changes: `git commit -m 'feat: add my feature'`
+4. Push and open a PR
+
+---
+
+## 📄 License
+
+MIT — free to use for educational purposes.
+
+---
+
+<div align="center">
+Made with ❤️ for CBSE Class 10 students · Powered by Groq · Built on LangChain
+</div>

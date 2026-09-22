@@ -330,59 +330,24 @@ def _extract_badges(text: str) -> tuple[str, str]:
 
 
 def normalize_latex_delimiters(text: str) -> str:
-    """Convert \\[ \\] and \\( \\) style LaTeX into $$ $$ and $ $ style,
-    since Streamlit and KaTeX auto-render primarily listen for $ delimiters."""
+    """Convert \\[ \\] and \\( \\) style LaTeX into $$ $$ and $ $ style.
+    ONLY safe conversions are applied — no heuristic bracket/paren detection
+    that could mangle normal prose text containing math characters."""
     if not text:
         return ""
+    # Convert explicit display-math delimiters: \[ ... \] -> $$ ... $$
     text = re.sub(r'\\\[(.*?)\\\]', r'$$\1$$', text, flags=re.DOTALL)
+    # Convert explicit inline-math delimiters: \( ... \) -> $ ... $
     text = re.sub(r'\\\((.*?)\\\)', r'$\1$', text, flags=re.DOTALL)
+    return text
 
-    # Fallback for standalone [ math ] brackets (e.g. [ V = I R . ])
-    def bracket_replacer(m):
-        full = m.group(0)
-        content = m.group(1).strip()
-        # Protect badges like [TEACH], [DIRECT], [MATHEMATICS], [PHYSICS], [CHEMISTRY], [ORIENT]
-        if re.match(r'^[A-Z_/ ]+$', content) and len(content) <= 20:
-            return full
-        math_inds = (
-            '\\', '=', '+', '-', '*', '/', '^', '_', '<', '>',
-            '\\frac', '\\dfrac', '\\text', '\\boxed', '\\Omega', '\\degree',
-            '\\times', '\\cdot', '\\sqrt', '\\alpha', '\\beta', '\\theta',
-            '\\mu', '\\rho', '\\pi', '\\Delta', '\\approx', '\\pm'
-        )
-        if any(ind in content for ind in math_inds) or re.search(r'[A-Za-z0-9_\{\}]+\s*=\s*[A-Za-z0-9_\{\}\\\s\.\,\+\-\*\/\(\)]+', content):
-            return f"\n$$\n{content}\n$$\n"
-        return full
 
-    text = re.sub(r'\[\s*([^\]\n]+?)\s*\](?!\()', bracket_replacer, text)
-
-    # Fallback for inline parenthesized latex like (V_2 = 120\ \text{V}) or (I = \dfrac{V}{R})
-    def paren_replacer(m):
-        full = m.group(0)
-        content = m.group(1).strip()
-        math_inds = (
-            '\\text', '\\frac', '\\dfrac', '\\Omega', '\\qquad', '\\times',
-            '\\cdot', '\\sqrt', '\\boxed', '\\alpha', '\\beta', '\\theta',
-            '\\mu', '\\rho', '\\pi', '\\degree', '\\Delta', '_'
-        )
-        if any(ind in content for ind in math_inds):
-            return f"${content}$"
-        return full
-
-    text = re.sub(r'\(([^()\n]+?)\)', paren_replacer, text)
-
-    # Ensure standalone \boxed{...} outside $ or $$ is wrapped in $$
-    def boxed_fixer(m):
-        prefix = m.group(1)
-        content = m.group(2)
-        if prefix == '$':
-            return m.group(0)
-        return f"{prefix}$$\\boxed{{{content}}}$$"
-
-    text = re.sub(r'(^|[^$])\\boxed\{([^{}]+)\}', boxed_fixer, text)
-
-    # Clean up empty block math
-    text = re.sub(r'\$\$\s*\$\$', '', text)
+def repair_malformed_latex(text: str) -> str:
+    """Fix \\left$ / \\right$ — a known model malformation where $ is used
+    as a grouping delimiter instead of a math-mode delimiter."""
+    if not text:
+        return ""
+    text = text.replace('\\left$', '\\left(').replace('\\right$', '\\right)')
     return text
 
 
@@ -393,7 +358,7 @@ def render_response(text: str, is_latest: bool = False):
     • Block equations ($$...$$) wrapped in a styled equation box
     • Final boxed answers in DIRECT mode receive a continuous line animation
     """
-    text = normalize_latex_delimiters(text)
+    text = repair_malformed_latex(normalize_latex_delimiters(text))
     badge_html, body = _extract_badges(text)
 
     if badge_html:
